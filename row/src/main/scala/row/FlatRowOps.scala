@@ -1,0 +1,5 @@
+package row
+
+trait FlatRowOps {
+
+}
