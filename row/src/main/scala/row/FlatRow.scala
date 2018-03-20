@@ -60,6 +60,8 @@ object FlatRow extends FlatRowPrimitives {
   final val EmptyValue = ""
   final val FieldValueSeparator = "-"
 
+  def apply[T](implicit ev: FlatRow[T]): FlatRow[T] = ev
+
   implicit class FlatRowOps[A](a: A)(implicit flatA: FlatRow[A]) {
     def schema: StructType = flatA.schema
 
@@ -68,7 +70,7 @@ object FlatRow extends FlatRowPrimitives {
     def row: Row = macro Ops.unop0[Row]
   }
 
-  private def prependFieldPrefix(prefix: String)(field: StructField): StructField = {
+  private[row] def prependFieldPrefix(prefix: String)(field: StructField): StructField = {
     val prefixedName =
       prefix +
         (if (field.name.nonEmpty) FieldNameSeparator else "") +
