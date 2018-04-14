@@ -18,14 +18,14 @@ object FlatMacros {
         val memberType = mem.typeSignature.resultType
         q"implicitly[FlatRow[$memberType]].flat(t.$mem)"
       }.fold(q"""Vector.empty[String]"""){ case (accumTree, flatMem) => q"$accumTree ++ $flatMem" }
-    val flatQuote = q"override def flat(t: SampleData): Vector[String] = $membersFlats"
+    val flatQuote = q"override def flat(t: ${dataType.tpe}): Vector[String] = $membersFlats"
 
     val membersRows =
       members.map { mem =>
         val memberType = mem.typeSignature.resultType
         q"implicitly[FlatRow[$memberType]].row(t.$mem)"
       }
-    val rowQuote = q"override def row(t: SampleData): Row = Row.merge(..$membersRows)"
+    val rowQuote = q"override def row(t: ${dataType.tpe}): Row = Row.merge(..$membersRows)"
 
     val membersFields =
       members.map { mem =>
@@ -35,6 +35,6 @@ object FlatMacros {
       }.reduce[Tree]{ case (fieldsA, fieldsB) => q"$fieldsA ++ $fieldsB" }
     val schemaQuote = q"override def schema: StructType = StructType($membersFields)"
 
-    c.Expr[FlatRow[D]](q"new FlatRow[SampleData] { $flatQuote; $rowQuote; $schemaQuote }")
+    c.Expr[FlatRow[D]](q"new FlatRow[${dataType.tpe}] { $flatQuote; $rowQuote; $schemaQuote }")
   }
 }

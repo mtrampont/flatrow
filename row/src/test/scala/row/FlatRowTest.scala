@@ -3,6 +3,7 @@ package row
 import common.UnitTest
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
+import row.FlatRow.prependFieldPrefix
 
 
 class FlatRowTest extends UnitTest {
@@ -65,6 +66,55 @@ class FlatRowTest extends UnitTest {
     vrow should have length 1
     vrow.getSeq[Int](0) should contain theSameElementsInOrderAs vector
 
+  }
+
+  it should "flatten collections of complex objects field by field" in {
+    case class SampleData(
+      someInt: Int,
+      optionalString: Option[String]
+    )
+
+    implicit val flatSampleData = new FlatRow[SampleData] {
+      override def flat(t: SampleData): Vector[String] = {
+        Vector.empty[String] ++
+          FlatRow[Int].flat(t.someInt) ++
+          FlatRow[Option[String]].flat(t.optionalString)
+      }
+
+      override def row(t: SampleData): Row = {
+        Row.merge(
+          FlatRow[Int].row(t.someInt),
+          FlatRow[Option[String]].row(t.optionalString)
+        )
+      }
+
+      override def schema: StructType = {
+        StructType(
+          FlatRow[Int].schema.fields.map(prependFieldPrefix("someInt")) ++
+            FlatRow[Option[String]].schema.fields.map(prependFieldPrefix("optionalString"))
+        )
+      }
+    }
+
+    val list = List(
+      SampleData(someInt = 1, optionalString = None),
+      SampleData(someInt = 2, optionalString = Some("foo")),
+      SampleData(someInt = 3, optionalString = Some("bar"))
+    )
+
+    list.flat should ===(Vector("1-2-3", "-foo-bar"))
+    val lrow = list.row
+    lrow should have size 2
+    lrow.getList[Int](0) should contain theSameElementsInOrderAs list.map(_.someInt)
+    lrow.getSeq[String](1) should contain theSameElementsInOrderAs
+      list.map(_.optionalString.fold[String](null)(identity))
+
+    list.schema should ===(
+      StructType(Seq(
+        StructField(name = "someInt", ArrayType(IntegerType, containsNull = false), nullable = false),
+        StructField(name = "optionalString", ArrayType(StringType, containsNull = true), nullable = false)
+      ))
+    )
   }
 
   it should "flatten options" in {
