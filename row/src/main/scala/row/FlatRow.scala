@@ -3,7 +3,7 @@ package row
 import java.text.NumberFormat
 
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types._ // scalastyle:ignore underscore.import
 import cats.macros.Ops
 
 import scala.annotation.implicitNotFound
@@ -55,10 +55,10 @@ trait FlatRowPrimitives {
 
 object FlatRow extends FlatRowPrimitives {
 
-  final val FieldNameSeparator = "_"
+  final val FieldNameSeparator: String = "_"
 
-  final val EmptyValue = ""
-  final val FieldValueSeparator = "-"
+  final val EmptyValue: String = ""
+  final val FieldValueSeparator: String = "-"
 
   def apply[T](implicit ev: FlatRow[T]): FlatRow[T] = ev
 
@@ -149,7 +149,7 @@ object FlatRow extends FlatRowPrimitives {
 
       override def row(t: Option[A]): Row = t match {
         case Some(a) => flatA.row(a)
-        case None => Row(Seq.fill(flatA.schema.fields.length)(null): _*)
+        case None => Row(Seq.fill(flatA.schema.fields.length)(null): _*) // scalastyle:ignore null
       }
     }
 

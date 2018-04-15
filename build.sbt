@@ -11,7 +11,10 @@ val commonSettings = Seq(
     "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
 
     "org.scalatest" %% "scalatest" % "3.0.4" % "test"
-  )
+  ),
+  scalastyleFailOnWarning := true,
+  coverageMinimum := 100,
+  coverageFailOnMinimum := true
 )
 
 lazy val macros =

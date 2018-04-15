@@ -7,8 +7,10 @@ object FlatMacros {
 
   implicit def flatRowCaseClass[D]: FlatRow[D] = macro flatRowImpl[D]
 
+  // Multiple string literals check does not work well with interpolated strings (e.g. quasiquotes)
+  // scalastyle:off multiple.string.literals
   def flatRowImpl[D: c.WeakTypeTag](c: BlackContext): c.Expr[FlatRow[D]] = {
-    import c.universe._
+    import c.universe._ // scalastyle:ignore
 
     val dataType = implicitly[c.WeakTypeTag[D]]
     val members = dataType.tpe.members.sorted.filter(s => s.isMethod && s.asMethod.isCaseAccessor)
@@ -37,4 +39,5 @@ object FlatMacros {
 
     c.Expr[FlatRow[D]](q"new FlatRow[${dataType.tpe}] { $flatQuote; $rowQuote; $schemaQuote }")
   }
+  // scalastyle:on multiple.string.literals
 }
