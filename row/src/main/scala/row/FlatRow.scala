@@ -70,7 +70,7 @@ object FlatRow extends FlatRowPrimitives {
     def row: Row = macro Ops.unop0[Row]
   }
 
-  private[row] def prependFieldPrefix(prefix: String)(field: StructField): StructField = {
+  def prependFieldPrefix(prefix: String)(field: StructField): StructField = {
     val prefixedName =
       prefix +
         (if (field.name.nonEmpty) FieldNameSeparator else "") +

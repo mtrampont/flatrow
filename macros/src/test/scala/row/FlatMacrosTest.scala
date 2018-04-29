@@ -1,4 +1,5 @@
 package row
+
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 
@@ -97,6 +98,34 @@ class FlatMacrosTest extends common.UnitTest {
       )
     )
 
+  }
+
+  it should "produce an intelligible error at compile time in case a field type is missing a type class" in {
+    import FlatMacros._
+
+    case class NotFlattableSampleData(
+      someString: String,
+      someBool: Boolean
+    )
+
+    "val autoFlatSample = implicitly[FlatRow[NotFlattableSampleData]]" shouldNot typeCheck
+  }
+
+  it should "still be possible to customize serialization of the case class" in {
+
+    val sample = CustomFlatData(
+      someString = "foo",
+      someAmount = 0.6666
+    )
+
+    sample.flat should ===(Vector("foo", "0,67"))
+    sample.row.toSeq should ===(Row("foo", 0.6666).toSeq)
+    sample.schema.fields should ===(
+      Array(
+        StructField(name = "someString", dataType = StringType, nullable = false),
+        StructField(name = "someAmount", dataType = DecimalType(DecimalType.MAX_PRECISION, 2), nullable = false)
+      )
+    )
   }
 
 }
